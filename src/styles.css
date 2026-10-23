@@ -157,7 +157,7 @@ button {
   flex-direction: column;
   gap: 24px;
   width: 100%;
-  max-width: 640px;
+  max-width: 760px;
 }
 
 /* The title stays centered on the page; the back button sits in the left column. */
@@ -282,13 +282,14 @@ button {
   height: 100%;
 }
 
-/* Two rows: the back button on the left and the actions on the right, then the game's details, centered. */
+/* Two rows: the back button on the left with the actions centered next to it, then the game's details, centered. */
 .play__header {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  /* Equal side columns keep the actions centered on the page, in line with the details below. */
+  grid-template-columns: minmax(44px, 1fr) minmax(0, auto) minmax(44px, 1fr);
   grid-template-areas:
-    'back actions'
-    'stats stats';
+    'back actions .'
+    'stats stats stats';
   align-items: center;
   column-gap: 12px;
   row-gap: 14px;
@@ -302,7 +303,7 @@ button {
   grid-area: actions;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 8px;
 }
 
@@ -331,6 +332,7 @@ button {
 /* Phones: the buttons are too wide to share a row with the back button, so it moves next to the details. */
 @media (max-width: 520px) {
   .play__header {
+    grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
       'actions actions'
       'back stats';

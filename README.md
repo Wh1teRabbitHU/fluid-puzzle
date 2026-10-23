@@ -11,8 +11,8 @@
 ## Summary
 
 Fluid Puzzle is a vial-sorting puzzle game that runs in your browser, on desktop and phone
-alike. Nothing to install and no account needed: your game is saved in the browser, so you can
-close the tab and continue later.
+alike. Nothing to install and no account needed: your game is saved in the browser, so once
+you've made a pour you can close the tab and continue later.
 
 ## How to play
 
@@ -74,7 +74,7 @@ first costs 10 (reverted pours count too). A solve always earns at least 10 poin
 Every solved game is saved in your browser. The **Scores** screen in the menu shows your overall
 statistics (finished games, fastest solve, fewest pours and overall score, the sum of all your
 scores) and lists your games, the most recent first, with when you finished, the difficulty, the
-time, the pours and the seed. Scroll down and use **Load older games** to see 10 earlier ones at a
+time, the pours, the score and the seed. Scroll down and use **Load older games** to see 10 earlier ones at a
 time, and click a seed to play that board again.
 
 The complete rules, including how boards are generated, are in [RULES.md](RULES.md).

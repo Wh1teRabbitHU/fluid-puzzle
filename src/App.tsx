@@ -56,7 +56,8 @@ export function App({ sharedSeed = null }: AppProps) {
   // The saved game is only replaced once a new one actually starts, so backing out keeps it.
   const chooseNewGame = () => setScreen('new');
 
-  const hasSavedGame = game !== null && !isSolved(game.board);
+  // A board nobody has poured on yet (its clock hasn't started) has nothing to continue or lose.
+  const hasSavedGame = game !== null && game.pours > 0 && !isSolved(game.board);
 
   return (
     <div className="app">

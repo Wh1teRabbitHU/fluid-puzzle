@@ -62,6 +62,7 @@ export function ScoresScreen({ hasSavedGame, onPlay, onBack }: ScoresScreenProps
                 <th scope="col">Difficulty</th>
                 <th scope="col">Time</th>
                 <th scope="col">Pours</th>
+                <th scope="col">Score</th>
                 <th scope="col">Seed</th>
               </tr>
             </thead>
@@ -74,6 +75,7 @@ export function ScoresScreen({ hasSavedGame, onPlay, onBack }: ScoresScreenProps
                     <td>{DIFFICULTY_LABELS[record.seed.difficulty]}</td>
                     <td>{formatTime(record.elapsedMs)}</td>
                     <td>{record.pours}</td>
+                    <td>{record.score.toLocaleString()}</td>
                     <td>
                       <button
                         className="scores__seed"

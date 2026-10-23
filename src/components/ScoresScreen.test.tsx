@@ -58,7 +58,7 @@ describe('ScoresScreen', () => {
     renderScores();
 
     const header = within(screen.getAllByRole('row')[0]).getAllByRole('columnheader').map((cell) => cell.textContent);
-    expect(header).toEqual(['Finished at', 'Difficulty', 'Time', 'Pours', 'Seed']);
+    expect(header).toEqual(['Finished at', 'Difficulty', 'Time', 'Pours', 'Score', 'Seed']);
     // In the order they were recorded, newest first, whatever their finish times say.
     expect(rows().map(cells)).toEqual(
       [2, 3, 1].map((n) => [
@@ -66,6 +66,7 @@ describe('ScoresScreen', () => {
         'Medium',
         `01:0${n}`,
         String(20 + n),
+        '500',
         shortSeedCode(encodeSeed(game(n).seed)),
       ]),
     );

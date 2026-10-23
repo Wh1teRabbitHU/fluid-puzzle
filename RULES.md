@@ -96,6 +96,13 @@ The **New game** buttons on the end screens work the same way: after a game
 over it asks for confirmation (the board could still be retried), after a
 solve it starts the next board straight away, since nothing is lost.
 
+### Continue
+
+The menu offers **Continue** while a game is in progress: it has had at least
+one pour and isn't solved. A board that hasn't been poured on yet (its clock
+hasn't started) doesn't count, so the menu offers no Continue for it, and
+starting another game or playing one from **Scores** doesn't ask first.
+
 ### Shared links
 
 Opening the game with a valid `game_hash` parameter starts that board right
@@ -152,6 +159,6 @@ A separate **statistics** summary is stored next to the history:
 - **Overall score** — the sum of the scores of every solved game.
 
 The **Scores** screen in the menu shows the statistics and lists the games,
-the most recent first: finished at, difficulty, time, pours and seed. It shows
+the most recent first: finished at, difficulty, time, pours, score and seed. It shows
 10 games at first; **Load older games** at the bottom adds 10 more each time. Clicking
 a seed starts that board again (asking first if a game is in progress).

@@ -74,11 +74,29 @@ describe('App', () => {
     render(<App />);
     await userEvent.click(button('New game'));
     await userEvent.click(screen.getByRole('button', { name: /^Easy/ }));
-    const board = boardLabels();
+    // Any legal pour starts the game: an empty vial takes the top of any other.
+    const target = vials().findIndex((vial) => vial.getAttribute('aria-label') === 'Empty vial');
+    await userEvent.click(vials()[target === 0 ? 1 : 0]);
+    await userEvent.click(vials()[target]);
+    const saved = loadGame()!;
+    expect(saved.pours).toBe(1);
 
     await userEvent.click(button('Back to menu'));
     await userEvent.click(button('Continue'));
-    expect(boardLabels()).toEqual(board);
+    expect(boardLabels()).toEqual(labelsOf(saved.board));
+  });
+
+  it('offers no Continue for a game that has not started yet', async () => {
+    render(<App />);
+    await userEvent.click(button('New game'));
+    await userEvent.click(screen.getByRole('button', { name: /^Easy/ }));
+    await userEvent.click(button('Back to menu'));
+
+    expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
+    // Nothing would be lost, so a new game doesn't ask first.
+    await userEvent.click(button('New game'));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'New game' })).toBeInTheDocument();
   });
 
   it('opens a shared game straight away, replacing the saved one', () => {
@@ -109,13 +127,13 @@ describe('App', () => {
   });
 
   it('saves every pour', async () => {
-    saveGame(gameOf(MID_GAME));
+    saveGame(gameOf(MID_GAME, { pours: 3 }));
     render(<App />);
     await userEvent.click(button('Continue'));
     await userEvent.click(vials()[0]);
     await userEvent.click(vials()[1]);
 
-    expect(loadGame()).toMatchObject({ initial: MID_GAME, pours: 1 });
+    expect(loadGame()).toMatchObject({ initial: MID_GAME, pours: 4 });
     expect(loadGame()?.board[1]).toEqual(['brown', 'brown', 'brown', 'brown']);
   });
 
