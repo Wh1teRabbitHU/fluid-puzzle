@@ -1,5 +1,6 @@
 #!/bin/sh
 # Runs the unit tests before every commit; a failing test aborts the commit.
+# On master it then builds the game into docs/ (served by GitHub Pages) and adds it to the commit.
 # Enabled by `npm install` (see the "prepare" script). Skip once with `git commit --no-verify`.
 
 # Git GUIs and editors often run hooks without the shell profile, so Node version managers
@@ -16,4 +17,10 @@ if ! command -v npm >/dev/null 2>&1; then
   exit 1
 fi
 
-npm test
+npm test || exit 1
+
+# Only master publishes. A detached HEAD (e.g. during a rebase) has no branch and is skipped too.
+[ "$(git symbolic-ref --short -q HEAD)" = "master" ] || exit 0
+
+npm run build:docs || exit 1
+git add --all docs
