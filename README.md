@@ -40,6 +40,7 @@ each: a game starts with 10 full, mixed vials and 2 empty ones to give you room 
 | **Revert**      | Takes back the last pour, even if pouring it back wouldn't be legal. You can revert all the way to the start. |
 | **Reset**       | Starts this board over from the beginning, with the clock and pours back at zero.                  |
 | **New game**    | After confirming, deals a fresh board on the same difficulty. Use the menu to pick another one. The New game button after a game over or a solve does the same. |
+| **Share**       | Shares a link to this board (or copies it), so a friend can play the exact same puzzle.            |
 
 ### Winning and losing
 
@@ -53,7 +54,8 @@ the more thoroughly the colors are mixed.
 
 A board never starts with a capped vial. Every game has a **seed** code shown on the play
 screen: click it to copy it, and use **Load seed** on the new-game page to play the same board
-again, or to challenge a friend with it.
+again, or to challenge a friend with it. Even easier: **Share** gives you a link that opens the
+board straight away.
 
 ## Scoring
 

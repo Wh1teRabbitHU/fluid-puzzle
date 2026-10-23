@@ -12,10 +12,22 @@ import type { GameSeed, GameState } from './game/types';
 /** `new`: picking the difficulty (or seed) for a new game. */
 type Screen = 'menu' | 'new' | 'play' | 'scores';
 
-export function App() {
-  const [screen, setScreen] = useState<Screen>('menu');
+interface AppProps {
+  /** The game a shared link opened the page with: it starts straight away, replacing any saved game. */
+  sharedSeed?: GameSeed | null;
+}
+
+function openingGame(sharedSeed: GameSeed | null): GameState | null {
+  if (sharedSeed === null) return loadGame();
+  const game = newGameState(sharedSeed, generateBoard(sharedSeed));
+  saveGame(game);
+  return game;
+}
+
+export function App({ sharedSeed = null }: AppProps) {
+  const [screen, setScreen] = useState<Screen>(sharedSeed === null ? 'menu' : 'play');
   // The game being played (or last played); null when nothing is stored.
-  const [game, setGame] = useState<GameState | null>(loadGame);
+  const [game, setGame] = useState(() => openingGame(sharedSeed));
   // Bumped on every new game or retry so the play field starts over (selection, timer).
   const [round, setRound] = useState(0);
 

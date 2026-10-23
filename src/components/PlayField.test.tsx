@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { pour } from '../game/logic';
 import { encodeSeed } from '../game/seed';
+import { shareUrl } from '../game/share';
 import type { GameState } from '../game/types';
 import { MID_GAME, ONE_POUR_FROM_SOLVED, ONE_POUR_FROM_STUCK, gameOf } from '../test/boards';
 import { stat, vialStates, vials } from '../test/queries';
@@ -242,6 +243,21 @@ describe('seed', () => {
     vi.unstubAllGlobals();
   });
 
+  it.each([
+    ['easy', 'Easy'],
+    ['medium', 'Medium'],
+    ['hard', 'Hard'],
+  ] as const)("shows the game's difficulty (%s)", (difficulty, label) => {
+    renderPlayField(gameOf(MID_GAME, { seed: { difficulty, seed: 1 } }));
+    expect(stat('Difficulty')).toBe(label);
+  });
+
+  it('shows the details in order: difficulty, seed, time, pours', () => {
+    renderPlayField(gameOf(MID_GAME));
+    const labels = [...document.querySelectorAll('.play__stats .stat__label')].map((label) => label.textContent);
+    expect(labels).toEqual(['Difficulty', 'Seed', 'Time', 'Pours']);
+  });
+
   it("shows the end of the game's seed code, and the whole code to assistive tech", () => {
     const code = encodeSeed({ difficulty: 'medium', seed: 99 });
     renderPlayField(gameOf(MID_GAME, { seed: { difficulty: 'medium', seed: 99 } }));
@@ -318,13 +334,103 @@ describe('seed', () => {
   });
 });
 
+describe('share', () => {
+  const seed = { difficulty: 'hard', seed: 5 } as const;
+  const link = () => shareUrl(seed);
+  const shareButton = () => screen.getByRole('button', { name: /^(Share|Link copied!)$/ });
+
+  /** A browser with (or without) a share sheet, on a touch device or a desktop. */
+  function stubDevice({ share, touch }: { share?: (data: ShareData) => Promise<void>; touch: boolean }) {
+    const clipboard = { writeText: vi.fn(async (_: string) => {}) };
+    const shareSheet = share && vi.fn(share);
+    vi.stubGlobal('navigator', { ...navigator, share: shareSheet, clipboard });
+    vi.stubGlobal('matchMedia', (query: string) => ({ matches: touch && query === '(pointer: coarse)' }));
+    return { share: shareSheet, clipboard };
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("links to this page with the game's seed code", () => {
+    const url = new URL(shareUrl(seed, 'https://example.com/fluid-puzzle/?other=1#top'));
+    expect(`${url.origin}${url.pathname}`).toBe('https://example.com/fluid-puzzle/');
+    expect([...url.searchParams]).toEqual([['game_hash', encodeSeed(seed)]]);
+    expect(url.hash).toBe('');
+  });
+
+  it('opens the share sheet on a touch device', async () => {
+    const { share, clipboard } = stubDevice({ share: async () => {}, touch: true });
+    renderPlayField(gameOf(MID_GAME, { seed }));
+
+    await act(async () => fireEvent.click(shareButton()));
+    expect(share).toHaveBeenCalledWith(expect.objectContaining({ url: link() }));
+    expect(clipboard.writeText).not.toHaveBeenCalled();
+    expect(shareButton()).toHaveTextContent('Share');
+  });
+
+  it('does nothing more when the share sheet is closed', async () => {
+    const { clipboard } = stubDevice({
+      share: async () => {
+        throw new DOMException('Share canceled', 'AbortError');
+      },
+      touch: true,
+    });
+    renderPlayField(gameOf(MID_GAME, { seed }));
+
+    await act(async () => fireEvent.click(shareButton()));
+    expect(clipboard.writeText).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['on a desktop, even one with a share sheet', { share: async () => {}, touch: false }],
+    ['on a touch device without a share sheet', { touch: true }],
+    [
+      'when sharing fails',
+      {
+        share: async () => {
+          throw new DOMException('Not allowed', 'NotAllowedError');
+        },
+        touch: true,
+      },
+    ],
+  ])('copies just the link and says so for 2 seconds %s', async (_, device) => {
+    const { share, clipboard } = stubDevice(device);
+    renderPlayField(gameOf(MID_GAME, { seed }));
+
+    await act(async () => fireEvent.click(shareButton()));
+    if (!device.touch) expect(share).not.toHaveBeenCalled();
+    expect(clipboard.writeText).toHaveBeenCalledExactlyOnceWith(link());
+    expect(shareButton()).toHaveTextContent('Link copied!');
+    advance(COPIED_FEEDBACK_MS);
+    expect(shareButton()).toHaveTextContent('Share');
+  });
+
+  it('copies the link in a browser without media queries', async () => {
+    const { clipboard } = stubDevice({ share: async () => {}, touch: false });
+    vi.stubGlobal('matchMedia', undefined);
+    renderPlayField(gameOf(MID_GAME, { seed }));
+    await act(async () => fireEvent.click(shareButton()));
+    expect(clipboard.writeText).toHaveBeenCalledWith(link());
+  });
+
+  it('does not start the clock', async () => {
+    stubDevice({ share: async () => {}, touch: true });
+    const { onChange } = renderPlayField(gameOf(MID_GAME));
+    await act(async () => fireEvent.click(shareButton()));
+    advance(5_000);
+    expect(stat('Time')).toBe('00:00');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});
+
 describe('actions', () => {
   const action = (name: 'How to play' | 'Revert' | 'Reset' | 'New game') => screen.getByRole('button', { name });
 
   it('lists the actions in order, starting with the help', () => {
     renderPlayField(gameOf(MID_GAME));
     const names = [...document.querySelectorAll('.play__action')].map((button) => button.textContent);
-    expect(names).toEqual(['How to play', 'Revert', 'Reset', 'New game']);
+    expect(names).toEqual(['How to play', 'Revert', 'Reset', 'New game', 'Share']);
   });
 
   it('opens the help and pauses the clock while it is open', () => {

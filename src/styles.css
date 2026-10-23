@@ -282,13 +282,16 @@ button {
   height: 100%;
 }
 
-/* Back button, actions and stats in three columns; the outer two share the leftover space equally so the
-   actions stay centered. On narrow screens the actions move to their own row under the other two. */
+/* Two rows: the back button on the left and the actions on the right, then the game's details, centered. */
 .play__header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  grid-template-areas: 'back actions stats';
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'back actions'
+    'stats stats';
   align-items: center;
+  column-gap: 12px;
+  row-gap: 14px;
 }
 
 .play__header > .icon-button {
@@ -298,7 +301,8 @@ button {
 .play__actions {
   grid-area: actions;
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 8px;
 }
 
@@ -324,13 +328,22 @@ button {
   opacity: 0.6;
 }
 
-@media (max-width: 960px) {
+/* Phones: the buttons are too wide to share a row with the back button, so it moves next to the details. */
+@media (max-width: 520px) {
   .play__header {
-    grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
-      'back stats'
-      'actions actions';
-    row-gap: 12px;
+      'actions actions'
+      'back stats';
+  }
+
+  .play__actions {
+    gap: 5px;
+  }
+
+  .play__action {
+    height: 34px;
+    padding: 0 7px;
+    font-size: 0.75rem;
   }
 }
 
@@ -348,15 +361,11 @@ button {
   background: var(--surface-hover);
 }
 
-.play__header {
-  gap: 16px;
-}
-
 .play__stats {
   grid-area: stats;
-  justify-self: end;
+  justify-self: center;
   display: flex;
-  gap: clamp(12px, 4vw, 24px);
+  gap: clamp(16px, 5vw, 36px);
   min-width: 0;
   max-width: 100%;
 }
@@ -364,7 +373,7 @@ button {
 .stat {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: center;
 }
 
 .stat__label {
@@ -383,11 +392,11 @@ button {
 /* The seed is long, so it shrinks first and is cut off with an ellipsis; clicking copies all of it. */
 .stat--seed {
   min-width: 0;
-  max-width: 180px;
+  max-width: 220px;
   padding: 0;
   border: none;
   background: none;
-  text-align: right;
+  text-align: center;
 }
 
 .stat--seed:hover .stat__value--seed {

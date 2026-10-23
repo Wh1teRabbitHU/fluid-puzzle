@@ -7,6 +7,7 @@ import { ConfirmDialog } from './ConfirmDialog';
 import { Dialog } from './Dialog';
 import { HowToPlayDialog } from './HowToPlayDialog';
 import { SeedStat } from './SeedStat';
+import { ShareButton } from './ShareButton';
 import { POUR_DURATION_MS, VialView, type VialState } from './VialView';
 
 interface PlayFieldProps {
@@ -150,8 +151,13 @@ export function PlayField({ game, onChange, onNewGame, onRetry, onExit }: PlayFi
           <button className="play__action" onClick={() => setConfirmingNewGame(true)}>
             New game
           </button>
+          <ShareButton seed={game.seed} />
         </div>
         <div className="play__stats">
+          <div className="stat">
+            <span className="stat__label">Difficulty</span>
+            <span className="stat__value">{DIFFICULTY_LABELS[game.seed.difficulty]}</span>
+          </div>
           <SeedStat seed={game.seed} />
           <div className="stat">
             <span className="stat__label">Time</span>

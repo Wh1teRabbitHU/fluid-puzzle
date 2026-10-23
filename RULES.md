@@ -74,9 +74,9 @@ A move is a single **pour** from a source vial into a target vial.
 5. Each successful pour counts as **one move**, regardless of how many units
    were transferred.
 
-## Revert, reset and new game
+## Revert, reset, new game and share
 
-The top of the play screen has three actions:
+The top of the play screen has these actions (next to **How to play**):
 
 - **Revert** takes back the last pour: the units go back where they came from,
   even if that wouldn't be a legal pour (e.g. onto a different color). Pours
@@ -87,10 +87,21 @@ The top of the play screen has three actions:
 - **New game** asks for confirmation, then starts a new random board on the
   same difficulty as the current game. (To pick another difficulty, start the
   new game from the menu.)
+- **Share** shares a link to the current board: the page address with a
+  `game_hash` parameter holding the game's seed code. On touch devices
+  (phones, tablets) it opens the system share sheet; in a desktop browser, or
+  without a share sheet, it copies just the link to the clipboard.
 
 The **New game** buttons on the end screens work the same way: after a game
 over it asks for confirmation (the board could still be retried), after a
 solve it starts the next board straight away, since nothing is lost.
+
+### Shared links
+
+Opening the game with a valid `game_hash` parameter starts that board right
+away, replacing any game in progress. The parameter is then removed from the
+address, so reloading the page doesn't start the board over. An invalid code
+is removed too, and the game opens on the menu as usual.
 
 ## Winning and losing
 

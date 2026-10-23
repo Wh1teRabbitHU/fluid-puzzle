@@ -71,6 +71,8 @@ export function HowToPlayDialog({ onClose }: HowToPlayDialogProps) {
             <dd>Starts this board over from the beginning.</dd>
             <dt>New game</dt>
             <dd>Deals a fresh board on the same difficulty.</dd>
+            <dt>Share</dt>
+            <dd>Sends a friend a link to this exact board.</dd>
           </dl>
         </section>
 

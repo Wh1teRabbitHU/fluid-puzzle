@@ -81,6 +81,23 @@ describe('App', () => {
     expect(boardLabels()).toEqual(board);
   });
 
+  it('opens a shared game straight away, replacing the saved one', () => {
+    const seed: GameSeed = { difficulty: 'hard', seed: 31 };
+    saveGame(gameOf(MID_GAME, { pours: 5 }));
+    render(<App sharedSeed={seed} />);
+
+    expect(boardLabels()).toEqual(labelsOf(generateBoard(seed)));
+    expect(stat('Pours')).toBe('0');
+    expect(loadGame()).toEqual(gameOf(generateBoard(seed), { seed }));
+  });
+
+  it('starts on the menu when the link had no valid game', () => {
+    saveGame(gameOf(MID_GAME, { pours: 5 }));
+    render(<App sharedSeed={null} />);
+    expect(button('Continue')).toBeInTheDocument();
+    expect(loadGame()).toMatchObject({ board: MID_GAME, pours: 5 });
+  });
+
   it('continues a game saved in an earlier visit', async () => {
     saveGame(gameOf(MID_GAME, { pours: 6, elapsedMs: 42_000 }));
     render(<App />);

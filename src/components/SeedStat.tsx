@@ -12,7 +12,7 @@ export function shortSeedCode(code: string): string {
   return code.length > 12 ? `…${code.slice(-10)}` : code;
 }
 
-async function copyText(text: string): Promise<boolean> {
+export async function copyText(text: string): Promise<boolean> {
   try {
     await navigator.clipboard.writeText(text);
     return true;

@@ -8,4 +8,4 @@ export const boardLabels = () => vials().map((vial) => vial.getAttribute('aria-l
 export const vialStates = () =>
   vials().map((vial) => [...vial.classList].find((name) => name.startsWith('vial--'))?.slice('vial--'.length));
 
-export const stat = (label: 'Time' | 'Pours') => screen.getByText(label, { selector: '.stat__label' }).nextElementSibling?.textContent;
+export const stat = (label: 'Difficulty' | 'Time' | 'Pours') => screen.getByText(label, { selector: '.stat__label' }).nextElementSibling?.textContent;
