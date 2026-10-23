@@ -100,7 +100,8 @@ once every vial holds some fluid.
 ## Time
 
 The clock starts with the first pour. It pauses while the player is in the
-menu or the page is hidden, and stops when the game is solved or over.
+menu, reading **How to play**, or the page is hidden, and stops when the game
+is solved or over.
 
 ## Scoring
 

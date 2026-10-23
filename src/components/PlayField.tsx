@@ -4,6 +4,7 @@ import { DIFFICULTY_LABELS } from '../game/seed';
 import type { GameState, Vial } from '../game/types';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Dialog } from './Dialog';
+import { HowToPlayDialog } from './HowToPlayDialog';
 import { SeedStat } from './SeedStat';
 import { POUR_DURATION_MS, VialView, type VialState } from './VialView';
 
@@ -42,10 +43,11 @@ export function PlayField({ game, onChange, onNewGame, onNewGameSameDifficulty, 
   // were already complete when the game was loaded.
   const [lastTarget, setLastTarget] = useState<number | null>(null);
   const [confirmingNewGame, setConfirmingNewGame] = useState(false);
+  const [showingHelp, setShowingHelp] = useState(false);
 
-  // The clock runs from the first pour until the game ends, paused while the page is hidden or the
-  // player is in the menu. `runningSince` is when the current stretch started; null while paused.
-  const canRun = () => pours > 0 && status === 'playing' && !document.hidden;
+  // The clock runs from the first pour until the game ends, paused while the page is hidden, the player
+  // is in the menu or reading the help. `runningSince` is when the current stretch started; null while paused.
+  const canRun = () => pours > 0 && status === 'playing' && !document.hidden && !showingHelp;
   const [runningSince, setRunningSince] = useState<number | null>(() => (canRun() ? Date.now() : null));
   const [now, setNow] = useState(Date.now);
   const elapsedAt = (time: number) => game.elapsedMs + (runningSince === null ? 0 : Math.max(0, time - runningSince));
@@ -136,6 +138,15 @@ export function PlayField({ game, onChange, onNewGame, onNewGameSameDifficulty, 
           ←
         </button>
         <div className="play__actions">
+          <button
+            className="play__action"
+            onClick={() => {
+              pauseClock();
+              setShowingHelp(true);
+            }}
+          >
+            How to play
+          </button>
           <button className="play__action" onClick={revert} disabled={game.moves.length === 0 || animation !== null}>
             Revert
           </button>
@@ -177,6 +188,16 @@ export function PlayField({ game, onChange, onNewGame, onNewGameSameDifficulty, 
           );
         })}
       </section>
+
+      {showingHelp && (
+        <HowToPlayDialog
+          onClose={() => {
+            setShowingHelp(false);
+            // canRun() would still see the help as open here.
+            if (pours > 0 && status === 'playing' && !document.hidden) setRunningSince(Date.now());
+          }}
+        />
+      )}
 
       {confirmingNewGame && (
         <ConfirmDialog

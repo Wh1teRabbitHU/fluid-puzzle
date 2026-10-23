@@ -214,7 +214,7 @@ button {
   opacity: 0.6;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 960px) {
   .play__header {
     grid-template-columns: auto minmax(0, 1fr);
     grid-template-areas:
@@ -620,6 +620,133 @@ button {
   margin-top: 8px;
   color: #ec5d62;
   font-size: 0.85rem;
+}
+
+/* ---------- Wide dialog (How to play) ---------- */
+
+.dialog--wide {
+  width: min(520px, calc(100% - 32px));
+  /* Keeps a clear gap above and below on any screen: 8% of the height, between 16px and 64px. */
+  max-height: calc(100% - 2 * clamp(16px, 8vh, 64px));
+}
+
+.dialog--wide .dialog__body {
+  text-align: left;
+}
+
+.dialog--wide .dialog__title {
+  text-align: center;
+}
+
+.howto {
+  display: grid;
+  gap: 18px;
+  margin-top: 12px;
+  font-size: 0.92rem;
+}
+
+.howto h3 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.howto strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.dialog__message .howto p + p {
+  margin-top: 8px;
+}
+
+.howto ol {
+  margin: 0;
+  padding-left: 1.3em;
+}
+
+.howto li + li {
+  margin-top: 3px;
+}
+
+.howto li::marker {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.howto__note {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface);
+  font-size: 0.85rem;
+}
+
+.howto__terms {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 14px;
+  margin: 0;
+}
+
+.howto__terms dt {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.howto__terms dd {
+  margin: 0;
+}
+
+.howto__figure {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.howto__arrow {
+  align-self: center;
+  margin: 0 6px;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+}
+
+/* Units stack bottom to top, like the real vials. */
+.howto__vial {
+  position: relative;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  width: 18px;
+  padding: 3px 3px 4px;
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  border-top: none;
+  border-radius: 0 0 9px 9px;
+}
+
+.howto__vial span {
+  height: 9px;
+  border-radius: 2px;
+}
+
+.howto__vial span:first-child {
+  border-radius: 2px 2px 6px 6px;
+}
+
+.howto__vial--capped::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -3px;
+  right: -3px;
+  height: 4px;
+  border-radius: 2px;
+  background: currentColor;
+  color: rgba(255, 255, 255, 0.55);
 }
 
 .dialog__actions {

@@ -1,8 +1,14 @@
 ![Fluid Puzzle: twelve vials of mixed colors waiting to be sorted](.github/screenshot.png)
 
-# fluid-puzzle
+# Fluid Puzzle
 
 ### ▶ [Play Fluid Puzzle in your browser](https://wh1terabbithu.github.io/fluid-puzzle/)
+
+#### Project Disclaimer
+
+*AI generated project, code quality is not representative of my capabilities. Made it to have some fun with claude and to play this awesome game on the go, anywhere*
+
+## Summary
 
 Fluid Puzzle is a game written in typescript for simple web usage
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FLUID_COLORS } from '../game/colors';
 import { ConfirmDialog } from './ConfirmDialog';
+import { HowToPlayDialog } from './HowToPlayDialog';
 
 interface MainMenuProps {
   hasSavedGame: boolean;
@@ -10,6 +11,7 @@ interface MainMenuProps {
 
 export function MainMenu({ hasSavedGame, onContinue, onNewGame }: MainMenuProps) {
   const [confirmingNewGame, setConfirmingNewGame] = useState(false);
+  const [showingHelp, setShowingHelp] = useState(false);
 
   return (
     <main className="menu">
@@ -33,6 +35,9 @@ export function MainMenu({ hasSavedGame, onContinue, onNewGame }: MainMenuProps)
         >
           New game
         </button>
+        <button className="menu__button" onClick={() => setShowingHelp(true)}>
+          How to play
+        </button>
         <button className="menu__button" disabled>
           Scores <span className="menu__soon">soon</span>
         </button>
@@ -40,6 +45,8 @@ export function MainMenu({ hasSavedGame, onContinue, onNewGame }: MainMenuProps)
           Options <span className="menu__soon">soon</span>
         </button>
       </nav>
+
+      {showingHelp && <HowToPlayDialog onClose={() => setShowingHelp(false)} />}
 
       {confirmingNewGame && (
         <ConfirmDialog

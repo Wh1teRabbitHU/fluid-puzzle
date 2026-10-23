@@ -319,7 +319,47 @@ describe('seed', () => {
 });
 
 describe('actions', () => {
-  const action = (name: 'Revert' | 'Reset' | 'New game') => screen.getByRole('button', { name });
+  const action = (name: 'How to play' | 'Revert' | 'Reset' | 'New game') => screen.getByRole('button', { name });
+
+  it('lists the actions in order, starting with the help', () => {
+    renderPlayField(gameOf(MID_GAME));
+    const names = [...document.querySelectorAll('.play__action')].map((button) => button.textContent);
+    expect(names).toEqual(['How to play', 'Revert', 'Reset', 'New game']);
+  });
+
+  it('opens the help and pauses the clock while it is open', () => {
+    renderPlayField(gameOf(MID_GAME));
+    pourAndSettle(0, 1);
+    advance(2_000);
+    fireEvent.click(action('How to play'));
+    const dialog = screen.getByRole('dialog', { name: 'How to play' });
+
+    advance(10_000);
+    expect(stat('Time')).toBe('00:02');
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Got it' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    advance(3_000);
+    expect(stat('Time')).toBe('00:05');
+  });
+
+  it('keeps the clock stopped after the help when no pour has been made yet', () => {
+    renderPlayField(gameOf(MID_GAME));
+    fireEvent.click(action('How to play'));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Got it' }));
+    advance(3_000);
+    expect(stat('Time')).toBe('00:00');
+  });
+
+  it('keeps the clock paused when the page comes back while the help is open', () => {
+    renderPlayField(gameOf(MID_GAME));
+    pourAndSettle(0, 1);
+    fireEvent.click(action('How to play'));
+    setHidden(true);
+    setHidden(false);
+    advance(5_000);
+    expect(stat('Time')).toBe('00:00');
+  });
 
   it('has nothing to revert or reset before the first pour', () => {
     renderPlayField(gameOf(MID_GAME));

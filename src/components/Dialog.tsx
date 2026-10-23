@@ -9,15 +9,19 @@ interface DialogProps {
   onCancel?: () => void;
   /** Makes the dialog a form: Enter in a field, or a submit button, calls this. */
   onSubmit?: () => void;
+  /** Wider, left-aligned and scrollable, for longer text. */
+  wide?: boolean;
 }
 
 /** A modal built on the native <dialog>, which gives focus trapping and Escape handling for free. */
-export function Dialog({ title, children, actions, onCancel, onSubmit }: DialogProps) {
+export function Dialog({ title, children, actions, onCancel, onSubmit, wide = false }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     dialog?.showModal();
+    // Opening focuses a button, which can scroll a tall dialog down to the actions; start at the top.
+    if (dialog) dialog.scrollTop = 0;
     return () => dialog?.close();
   }, []);
 
@@ -34,7 +38,7 @@ export function Dialog({ title, children, actions, onCancel, onSubmit }: DialogP
   return (
     <dialog
       ref={dialogRef}
-      className="dialog"
+      className={`dialog${wide ? ' dialog--wide' : ''}`}
       aria-labelledby="dialog-title"
       onCancel={(event) => {
         event.preventDefault();
