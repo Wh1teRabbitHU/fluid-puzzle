@@ -1,8 +1,10 @@
 import { FLUID_COLORS } from './colors';
 import { isGameSeed } from './seed';
-import { VIAL_CAPACITY, VIAL_COUNT, type Board, type GameState, type Move } from './types';
+import { VIAL_CAPACITY, VIAL_COUNT, type Board, type GameRecord, type GameState, type Move, type Stats } from './types';
 
 const STORAGE_KEY = 'fluid-puzzle:game';
+const HISTORY_KEY = 'fluid-puzzle:history';
+const STATS_KEY = 'fluid-puzzle:stats';
 
 function isBoard(value: unknown): value is Board {
   return (
@@ -76,4 +78,72 @@ export function clearGame(): void {
   } catch {
     // See saveGame.
   }
+}
+
+const isCount = (value: unknown) => Number.isInteger(value) && (value as number) >= 0;
+const isDuration = (value: unknown) => typeof value === 'number' && value >= 0;
+
+function isGameRecord(value: unknown): value is GameRecord {
+  if (typeof value !== 'object' || value === null) return false;
+  const { seed, finishedAt, elapsedMs, pours, score } = value as Record<string, unknown>;
+  return isGameSeed(seed) && isDuration(finishedAt) && isDuration(elapsedMs) && isCount(pours) && isCount(score);
+}
+
+function isStats(value: unknown): value is Stats {
+  if (typeof value !== 'object' || value === null) return false;
+  const { finishedGames, fastestMs, fewestPours, totalScore } = value as Record<string, unknown>;
+  return (
+    isCount(finishedGames) &&
+    (fastestMs === null || isDuration(fastestMs)) &&
+    (fewestPours === null || isCount(fewestPours)) &&
+    isCount(totalScore)
+  );
+}
+
+function readJson(key: string): unknown {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw === null ? null : JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+function writeJson(key: string, value: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // See saveGame.
+  }
+}
+
+/** Every solved game, oldest first. Unreadable entries are skipped. */
+export function loadHistory(): GameRecord[] {
+  const history = readJson(HISTORY_KEY);
+  return Array.isArray(history) ? history.filter(isGameRecord) : [];
+}
+
+export const EMPTY_STATS: Stats = { finishedGames: 0, fastestMs: null, fewestPours: null, totalScore: 0 };
+
+/** `stats` with `record` counted in. */
+export function addToStats(stats: Stats, record: GameRecord): Stats {
+  return {
+    finishedGames: stats.finishedGames + 1,
+    fastestMs: Math.min(stats.fastestMs ?? Infinity, record.elapsedMs),
+    fewestPours: Math.min(stats.fewestPours ?? Infinity, record.pours),
+    totalScore: stats.totalScore + record.score,
+  };
+}
+
+/** The stored summary; rebuilt from the history if it is missing or unreadable. */
+export function loadStats(): Stats {
+  const stats = readJson(STATS_KEY);
+  return isStats(stats) ? stats : loadHistory().reduce(addToStats, EMPTY_STATS);
+}
+
+/** Adds a solved game to the history and the stats. */
+export function recordGame(record: GameRecord): void {
+  const stats = loadStats();
+  writeJson(HISTORY_KEY, [...loadHistory(), record]);
+  writeJson(STATS_KEY, addToStats(stats, record));
 }

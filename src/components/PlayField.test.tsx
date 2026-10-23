@@ -11,7 +11,7 @@ import { COPIED_FEEDBACK_MS, shortSeedCode } from './SeedStat';
 import { POUR_DURATION_MS } from './VialView';
 
 function renderPlayField(initial: GameState) {
-  const props = { onChange: vi.fn(), onNewGame: vi.fn(), onNewGameSameDifficulty: vi.fn(), onRetry: vi.fn(), onExit: vi.fn() };
+  const props = { onChange: vi.fn(), onNewGame: vi.fn(), onRetry: vi.fn(), onExit: vi.fn() };
   // PlayField is controlled; this stands in for App, which owns the state.
   function Harness() {
     const [game, setGame] = useState(initial);
@@ -449,19 +449,18 @@ describe('actions', () => {
   });
 
   it('asks before starting a new game on the same difficulty', () => {
-    const { onNewGame, onNewGameSameDifficulty } = renderPlayField(gameOf(MID_GAME, { seed: { difficulty: 'hard', seed: 7 } }));
+    const { onNewGame } = renderPlayField(gameOf(MID_GAME, { seed: { difficulty: 'hard', seed: 7 } }));
     fireEvent.click(action('New game'));
     const dialog = screen.getByRole('dialog', { name: 'Start a new game?' });
     expect(dialog).toHaveTextContent('a new Hard game starts');
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(onNewGameSameDifficulty).not.toHaveBeenCalled();
+    expect(onNewGame).not.toHaveBeenCalled();
 
     fireEvent.click(action('New game'));
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'New game' }));
-    expect(onNewGameSameDifficulty).toHaveBeenCalledOnce();
-    expect(onNewGame).not.toHaveBeenCalled();
+    expect(onNewGame).toHaveBeenCalledOnce();
   });
 });
 
@@ -478,10 +477,10 @@ describe('end of game', () => {
     expect(dialog).toHaveTextContent('You solved the puzzle.');
     expect(dialog).toHaveTextContent('Time01:00');
     expect(dialog).toHaveTextContent('Pours10');
-    expect(dialog).toHaveTextContent(`Score${(10_000 - 5 * 60 - 20 * 10).toLocaleString()}`);
+    expect(dialog).toHaveTextContent(`Score${1_000 - 5 * 12 - 10 * 9}`);
   });
 
-  it('offers a new game or the menu after solving, but no retry', () => {
+  it('offers a new game (without asking) or the menu after solving, but no retry', () => {
     const { onNewGame, onExit } = renderPlayField(gameOf(ONE_POUR_FROM_SOLVED, { pours: 1 }));
     pourAndSettle(1, 0);
     const dialog = within(screen.getByRole('dialog', { name: 'Congratulations!' }));
@@ -502,18 +501,35 @@ describe('end of game', () => {
   });
 
   it('ends the game when no legal pour is left', () => {
-    const { onNewGame, onRetry, onExit } = renderPlayField(gameOf(ONE_POUR_FROM_STUCK, { pours: 1 }));
+    const { onRetry, onExit } = renderPlayField(gameOf(ONE_POUR_FROM_STUCK, { pours: 1 }));
     pourAndSettle(11, 10);
 
     const dialog = screen.getByRole('dialog', { name: 'Game over' });
     expect(dialog).toHaveTextContent('No more legal moves left.');
 
-    fireEvent.click(within(dialog).getByRole('button', { name: 'New game' }));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Retry' }));
     fireEvent.click(within(dialog).getByRole('button', { name: 'Menu' }));
-    expect(onNewGame).toHaveBeenCalledOnce();
     expect(onRetry).toHaveBeenCalledOnce();
     expect(onExit).toHaveBeenCalledOnce();
+  });
+
+  it('asks before a new game from the game-over dialog, which returns on cancel', () => {
+    const { onNewGame } = renderPlayField(gameOf(ONE_POUR_FROM_STUCK, { pours: 1, seed: { difficulty: 'medium', seed: 3 } }));
+    pourAndSettle(11, 10);
+
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Game over' })).getByRole('button', { name: 'New game' }));
+    // Only the confirmation is shown, not both dialogs at once.
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    const confirm = screen.getByRole('dialog', { name: 'Start a new game?' });
+    expect(confirm).toHaveTextContent('a new Medium game starts');
+
+    fireEvent.click(within(confirm).getByRole('button', { name: 'Cancel' }));
+    expect(onNewGame).not.toHaveBeenCalled();
+    expect(screen.getByRole('dialog', { name: 'Game over' })).toBeInTheDocument();
+
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Game over' })).getByRole('button', { name: 'New game' }));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Start a new game?' })).getByRole('button', { name: 'New game' }));
+    expect(onNewGame).toHaveBeenCalledOnce();
   });
 
   it('shows the end dialog straight away when resuming a finished game', () => {

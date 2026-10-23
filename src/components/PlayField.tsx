@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { canPour, gameStatus, isComplete, isSelectable, pour, revertMove, score } from '../game/logic';
+import { formatTime } from '../game/format';
 import { DIFFICULTY_LABELS } from '../game/seed';
 import type { GameState, Vial } from '../game/types';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -12,10 +13,8 @@ interface PlayFieldProps {
   game: GameState;
   /** Called with the new state after every pour (and when the clock pauses); the owner persists it. */
   onChange: (game: GameState) => void;
-  /** From the end dialogs: lets the player pick the next game's difficulty. */
+  /** Starts a fresh random board on the current game's difficulty (after the player confirms). */
   onNewGame: () => void;
-  /** From the New game action: starts a fresh board on the current game's difficulty straight away. */
-  onNewGameSameDifficulty: () => void;
   /** Starts the game over from its initial board: Retry after a loss, and Reset. */
   onRetry: () => void;
   onExit: () => void;
@@ -29,12 +28,7 @@ interface PourAnimation {
   source: Vial;
 }
 
-function formatTime(ms: number): string {
-  const seconds = Math.floor(ms / 1000);
-  return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
-}
-
-export function PlayField({ game, onChange, onNewGame, onNewGameSameDifficulty, onRetry, onExit }: PlayFieldProps) {
+export function PlayField({ game, onChange, onNewGame, onRetry, onExit }: PlayFieldProps) {
   const { board, pours } = game;
   const status = gameStatus(board);
   const [selected, setSelected] = useState<number | null>(null);
@@ -204,7 +198,7 @@ export function PlayField({ game, onChange, onNewGame, onNewGameSameDifficulty, 
           title="Start a new game?"
           message={`Your current game will be lost and a new ${DIFFICULTY_LABELS[game.seed.difficulty]} game starts. This can't be undone.`}
           confirmLabel="New game"
-          onConfirm={onNewGameSameDifficulty}
+          onConfirm={onNewGame}
           onCancel={() => setConfirmingNewGame(false)}
         />
       )}
@@ -241,12 +235,12 @@ export function PlayField({ game, onChange, onNewGame, onNewGameSameDifficulty, 
         </Dialog>
       )}
 
-      {animation === null && status === 'stuck' && (
+      {animation === null && status === 'stuck' && !confirmingNewGame && (
         <Dialog
           title="Game over"
           actions={
             <>
-              <button className="menu__button menu__button--primary" onClick={onNewGame} autoFocus>
+              <button className="menu__button menu__button--primary" onClick={() => setConfirmingNewGame(true)} autoFocus>
                 New game
               </button>
               <button className="menu__button" onClick={onRetry}>

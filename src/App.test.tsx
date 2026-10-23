@@ -5,7 +5,7 @@ import { App } from './App';
 import { POUR_DURATION_MS } from './components/VialView';
 import { generateBoard } from './game/generate';
 import { encodeSeed } from './game/seed';
-import { loadGame, saveGame } from './game/storage';
+import { loadGame, loadHistory, loadStats, recordGame, saveGame } from './game/storage';
 import type { GameSeed } from './game/types';
 import { MID_GAME, ONE_POUR_FROM_SOLVED, STUCK, TEST_SEED, gameOf } from './test/boards';
 import { boardLabels, stat, vials } from './test/queries';
@@ -174,6 +174,59 @@ describe('App', () => {
     expect(screen.queryByRole('button', { name: 'Continue' })).not.toBeInTheDocument();
   });
 
+  it('records a solved game once, with its score, and lists it under Scores', () => {
+    vi.useFakeTimers({ now: Date.UTC(2026, 9, 23, 12) });
+    saveGame(gameOf(ONE_POUR_FROM_SOLVED, { pours: 3, elapsedMs: 42_000 }));
+    render(<App />);
+    fireEvent.click(button('Continue'));
+    fireEvent.click(vials()[1]);
+    fireEvent.click(vials()[0]);
+    act(() => vi.advanceTimersByTime(POUR_DURATION_MS));
+    fireEvent.click(button('Menu'));
+
+    const record = { seed: TEST_SEED, finishedAt: Date.UTC(2026, 9, 23, 12), elapsedMs: 42_000, pours: 4, score: 1_000 - 5 * 8 - 10 * 3 };
+    expect(loadHistory()).toEqual([record]);
+    expect(loadStats()).toEqual({ finishedGames: 1, fastestMs: 42_000, fewestPours: 4, totalScore: record.score });
+
+    fireEvent.click(button('Scores'));
+    expect(screen.getAllByRole('row')).toHaveLength(2);
+    expect(screen.getByText('Finished games').nextElementSibling).toHaveTextContent('1');
+  });
+
+  it('does not record a lost game', async () => {
+    saveGame(gameOf(MID_GAME, { board: STUCK, pours: 9 }));
+    render(<App />);
+    await userEvent.click(button('Continue'));
+    expect(screen.getByRole('dialog', { name: 'Game over' })).toBeInTheDocument();
+    expect(loadHistory()).toEqual([]);
+  });
+
+  it('plays a game again from its seed on the scores screen', async () => {
+    const seed: GameSeed = { difficulty: 'hard', seed: 99 };
+    recordGame({ seed, finishedAt: 1, elapsedMs: 60_000, pours: 40, score: 550 });
+    render(<App />);
+    await userEvent.click(button('Scores'));
+    await userEvent.click(button(`Play game ${encodeSeed(seed)}`));
+
+    expect(boardLabels()).toEqual(labelsOf(generateBoard(seed)));
+    expect(stat('Pours')).toBe('0');
+    expect(loadGame()).toEqual(gameOf(generateBoard(seed), { seed }));
+  });
+
+  it('asks before a game from the scores replaces the one in progress', async () => {
+    const seed: GameSeed = { difficulty: 'hard', seed: 99 };
+    recordGame({ seed, finishedAt: 1, elapsedMs: 60_000, pours: 40, score: 550 });
+    saveGame(gameOf(MID_GAME, { pours: 5 }));
+    render(<App />);
+    await userEvent.click(button('Scores'));
+    await userEvent.click(button(`Play game ${encodeSeed(seed)}`));
+    expect(loadGame()).toMatchObject({ board: MID_GAME, pours: 5 });
+
+    await userEvent.click(button('Play'));
+    expect(loadGame()).toMatchObject({ seed, pours: 0 });
+    expect(boardLabels()).toEqual(labelsOf(generateBoard(seed)));
+  });
+
   it('retries a lost game from its original setup', async () => {
     saveGame(gameOf(MID_GAME, { board: STUCK, pours: 9, elapsedMs: 30_000 }));
     render(<App />);
@@ -188,16 +241,38 @@ describe('App', () => {
     expect(loadGame()?.seed).toEqual(TEST_SEED);
   });
 
-  it('starts a new game from the game-over dialog without asking', async () => {
-    saveGame(gameOf(MID_GAME, { board: STUCK, pours: 9 }));
+  it('starts a new game on the same difficulty from the game-over dialog, after confirming', async () => {
+    const seed: GameSeed = { difficulty: 'medium', seed: 7 };
+    saveGame(gameOf(MID_GAME, { seed, board: STUCK, pours: 9 }));
     render(<App />);
     await userEvent.click(button('Continue'));
     await userEvent.click(within(screen.getByRole('dialog', { name: 'Game over' })).getByRole('button', { name: 'New game' }));
+    expect(loadGame()).toMatchObject({ board: STUCK });
+    await userEvent.click(within(screen.getByRole('dialog', { name: 'Start a new game?' })).getByRole('button', { name: 'New game' }));
+
+    // Straight into the new game, without the difficulty page.
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    const next = loadGame()!;
+    expect(next.seed).toMatchObject({ difficulty: 'medium' });
+    expect(next.seed.seed).not.toBe(7);
+    expect(next).toEqual(gameOf(generateBoard(next.seed), { seed: next.seed }));
+    expect(boardLabels()).toEqual(labelsOf(next.board));
+  });
+
+  it('starts the next game on the same difficulty right after a solve', () => {
+    vi.useFakeTimers();
+    saveGame(gameOf(ONE_POUR_FROM_SOLVED, { seed: { difficulty: 'hard', seed: 7 }, pours: 3 }));
+    render(<App />);
+    fireEvent.click(button('Continue'));
+    fireEvent.click(vials()[1]);
+    fireEvent.click(vials()[0]);
+    act(() => vi.advanceTimersByTime(POUR_DURATION_MS));
+    fireEvent.click(within(screen.getByRole('dialog', { name: 'Congratulations!' })).getByRole('button', { name: 'New game' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: /^Hard/ }));
-    expect(loadGame()).toMatchObject({ pours: 0 });
-    expect(loadGame()?.initial).not.toEqual(MID_GAME);
+    const next = loadGame()!;
+    expect(next.seed.difficulty).toBe('hard');
+    expect(next).toEqual(gameOf(generateBoard(next.seed), { seed: next.seed }));
   });
 
   it('returns to the menu from the game-over dialog, keeping the game for a retry', async () => {

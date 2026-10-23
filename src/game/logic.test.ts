@@ -214,16 +214,25 @@ describe('newGameState', () => {
 });
 
 describe('score', () => {
-  it('starts at 10 000 and costs 5 per second and 20 per pour', () => {
-    expect(score(0, 0)).toBe(10_000);
-    expect(score(60_000, 10)).toBe(10_000 - 5 * 60 - 20 * 10);
+  it('gives the full 1 000 for a 1-pour solve within 5 seconds', () => {
+    expect(score(0, 1)).toBe(1_000);
+    expect(score(1_000, 1)).toBe(1_000);
+    expect(score(4_999, 1)).toBe(1_000);
   });
 
-  it('only counts whole seconds', () => {
-    expect(score(1_999, 0)).toBe(10_000 - 5);
+  it('costs 5 points for every full 5 seconds', () => {
+    expect(score(5_000, 1)).toBe(995);
+    expect(score(9_999, 1)).toBe(995);
+    expect(score(60_000, 1)).toBe(1_000 - 5 * 12);
   });
 
-  it('never goes below 100', () => {
-    expect(score(3_600_000, 500)).toBe(100);
+  it('costs 10 points for every pour after the first', () => {
+    expect(score(0, 2)).toBe(990);
+    expect(score(0, 30)).toBe(1_000 - 10 * 29);
+    expect(score(60_000, 30)).toBe(1_000 - 5 * 12 - 10 * 29);
+  });
+
+  it('never goes below 10', () => {
+    expect(score(3_600_000, 500)).toBe(10);
   });
 });

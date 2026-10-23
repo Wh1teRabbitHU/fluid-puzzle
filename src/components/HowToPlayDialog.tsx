@@ -77,8 +77,9 @@ export function HowToPlayDialog({ onClose }: HowToPlayDialogProps) {
         <section>
           <h3>Score</h3>
           <p>
-            The clock starts with your first pour. You start at <strong>10,000</strong> points and lose 5 for every
-            second and 20 for every pour (reverted ones too), but a solve is always worth at least 100.
+            The clock starts with your first pour. A solve is worth up to <strong>1,000</strong> points: you lose 5
+            for every 5 seconds and 10 for every pour after the first (reverted ones too), but always earn at least
+            10. Your solves are listed under <strong>Scores</strong> in the menu.
           </p>
           <p className="howto__note">If no pour is possible anymore, the game is over: you can retry the same board or start a new one.</p>
         </section>

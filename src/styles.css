@@ -129,17 +129,6 @@ button {
   color: var(--text-muted);
 }
 
-.menu__button--difficulty {
-  justify-content: space-between;
-  padding: 0 20px;
-}
-
-.menu__hint {
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 400;
-}
-
 .menu__link {
   height: 44px;
   border: none;
@@ -159,6 +148,127 @@ button {
   font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+/* ---------- Scores ---------- */
+
+.scores {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 100%;
+  max-width: 640px;
+}
+
+/* The title stays centered on the page; the back button sits in the left column. */
+.scores__header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+}
+
+.scores__title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.scores__stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.scores__stats > div {
+  padding: 14px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  text-align: center;
+}
+
+.scores__stats dt {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.scores__stats dd {
+  margin: 6px 0 0;
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 560px) {
+  .scores__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.scores__empty {
+  margin: 24px 0;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.scores__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.scores__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.scores__table th,
+.scores__table td {
+  padding: 12px 14px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.scores__table th {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.scores__table tbody tr {
+  border-top: 1px solid var(--border);
+}
+
+.scores__seed {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 0.9rem;
+}
+
+.scores__seed:hover {
+  text-decoration: underline;
+}
+
+.scores__seed:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.scores__more {
+  align-self: center;
+  padding: 0 24px;
 }
 
 /* ---------- Play field ---------- */

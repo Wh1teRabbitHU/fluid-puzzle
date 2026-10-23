@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { DIFFICULTIES, DIFFICULTY_LABELS, SHUFFLE_STEPS, randomSeed } from '../game/seed';
+import { DIFFICULTIES, DIFFICULTY_LABELS, randomSeed } from '../game/seed';
 import type { GameSeed } from '../game/types';
 import { LoadSeedDialog } from './LoadSeedDialog';
 
@@ -20,11 +20,10 @@ export function NewGameMenu({ onStart, onBack }: NewGameMenuProps) {
         {DIFFICULTIES.map((difficulty) => (
           <button
             key={difficulty}
-            className="menu__button menu__button--difficulty"
+            className="menu__button"
             onClick={() => onStart({ difficulty, seed: randomSeed() })}
           >
-            {DIFFICULTY_LABELS[difficulty]}{' '}
-            <span className="menu__hint">{SHUFFLE_STEPS[difficulty]} shuffles</span>
+            {DIFFICULTY_LABELS[difficulty]}
           </button>
         ))}
         <button className="menu__button" onClick={() => setLoadingSeed(true)}>

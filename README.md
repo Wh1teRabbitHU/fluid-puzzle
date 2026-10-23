@@ -39,7 +39,7 @@ each: a game starts with 10 full, mixed vials and 2 empty ones to give you room 
 | **How to play** | Shows a short version of these rules. The clock pauses while it's open.                            |
 | **Revert**      | Takes back the last pour, even if pouring it back wouldn't be legal. You can revert all the way to the start. |
 | **Reset**       | Starts this board over from the beginning, with the clock and pours back at zero.                  |
-| **New game**    | After confirming, deals a fresh board on the same difficulty. Use the menu to pick another one.   |
+| **New game**    | After confirming, deals a fresh board on the same difficulty. Use the menu to pick another one. The New game button after a game over or a solve does the same. |
 
 ### Winning and losing
 
@@ -48,13 +48,8 @@ anymore before that, the game is **over**: you can retry the same board or start
 
 ## Difficulty and seeds
 
-A new game starts by picking a difficulty, which sets how thoroughly the board is mixed:
-
-| Difficulty | Shuffle moves |
-| ---------- | ------------- |
-| Easy       | 100           |
-| Medium     | 300           |
-| Hard       | 600           |
+A new game starts by picking a difficulty: **Easy**, **Medium** or **Hard**. The harder it is,
+the more thoroughly the colors are mixed.
 
 A board never starts with a capped vial. Every game has a **seed** code shown on the play
 screen: click it to copy it, and use **Load seed** on the new-game page to play the same board
@@ -63,14 +58,22 @@ again, or to challenge a friend with it.
 ## Scoring
 
 The clock starts with your first pour, and pauses while you're in the menu, reading How to
-play, or away from the page. When you solve the puzzle, your score is:
+play, or away from the page. When you solve the puzzle, the success screen shows your score:
 
 ```
-score = max(100, 10 000 − 5 × seconds − 20 × pours)
+score = max(10, 1000 − 5 × ⌊seconds / 5⌋ − 10 × (pours − 1))
 ```
 
-Every second costs 5 points and every pour costs 20 (reverted pours count too), so one pour is
-worth about four seconds of thinking. A solve is always worth at least 100 points.
+A solve is worth up to **1,000 points**. Every 5 seconds cost 5 points and every pour after the
+first costs 10 (reverted pours count too). A solve always earns at least 10 points.
+
+## Scores
+
+Every solved game is saved in your browser. The **Scores** screen in the menu shows your overall
+statistics (finished games, fastest solve, fewest pours and overall score, the sum of all your
+scores) and lists your games, the most recent first, with when you finished, the difficulty, the
+time, the pours and the seed. Scroll down and use **Load older games** to see 10 earlier ones at a
+time, and click a seed to play that board again.
 
 The complete rules, including how boards are generated, are in [RULES.md](RULES.md).
 

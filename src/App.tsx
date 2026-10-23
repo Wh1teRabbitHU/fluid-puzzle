@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { MainMenu } from './components/MainMenu';
 import { NewGameMenu } from './components/NewGameMenu';
 import { PlayField } from './components/PlayField';
+import { ScoresScreen } from './components/ScoresScreen';
 import { generateBoard } from './game/generate';
-import { isSolved, newGameState } from './game/logic';
+import { isSolved, newGameState, score } from './game/logic';
 import { randomSeed } from './game/seed';
-import { clearGame, loadGame, saveGame } from './game/storage';
+import { clearGame, loadGame, recordGame, saveGame } from './game/storage';
 import type { GameSeed, GameState } from './game/types';
 
 /** `new`: picking the difficulty (or seed) for a new game. */
-type Screen = 'menu' | 'new' | 'play';
+type Screen = 'menu' | 'new' | 'play' | 'scores';
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('menu');
@@ -20,8 +21,14 @@ export function App() {
 
   function updateGame(next: GameState) {
     // A solved game can't be continued, so it isn't kept. A stuck one is, so it can still be retried.
-    if (isSolved(next.board)) clearGame();
-    else saveGame(next);
+    if (isSolved(next.board)) {
+      // Only the solving pour records it; the play field may still report the solved game afterwards.
+      if (game === null || !isSolved(game.board)) {
+        const { seed, elapsedMs, pours } = next;
+        recordGame({ seed, finishedAt: Date.now(), elapsedMs, pours, score: score(elapsedMs, pours) });
+      }
+      clearGame();
+    } else saveGame(next);
     setGame(next);
   }
 
@@ -37,23 +44,28 @@ export function App() {
   // The saved game is only replaced once a new one actually starts, so backing out keeps it.
   const chooseNewGame = () => setScreen('new');
 
+  const hasSavedGame = game !== null && !isSolved(game.board);
+
   return (
     <div className="app">
       {screen === 'menu' && (
         <MainMenu
-          hasSavedGame={game !== null && !isSolved(game.board)}
+          hasSavedGame={hasSavedGame}
           onContinue={() => setScreen('play')}
           onNewGame={chooseNewGame}
+          onScores={() => setScreen('scores')}
         />
       )}
       {screen === 'new' && <NewGameMenu onStart={startNewGame} onBack={() => setScreen('menu')} />}
+      {screen === 'scores' && (
+        <ScoresScreen hasSavedGame={hasSavedGame} onPlay={startNewGame} onBack={() => setScreen('menu')} />
+      )}
       {screen === 'play' && game !== null && (
         <PlayField
           key={round}
           game={game}
           onChange={updateGame}
-          onNewGame={chooseNewGame}
-          onNewGameSameDifficulty={startSameDifficulty}
+          onNewGame={startSameDifficulty}
           onRetry={retry}
           onExit={() => setScreen('menu')}
         />

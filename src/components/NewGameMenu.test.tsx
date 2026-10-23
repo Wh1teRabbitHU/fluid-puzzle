@@ -28,11 +28,11 @@ describe('NewGameMenu', () => {
     expect(first.seed).not.toBe(second.seed);
   });
 
-  it('shows how much each difficulty shuffles', () => {
+  it('names the difficulties without technical details', () => {
     renderMenu();
-    expect(screen.getByRole('button', { name: 'Easy 100 shuffles' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Medium 300 shuffles' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Hard 600 shuffles' })).toBeInTheDocument();
+    for (const label of ['Easy', 'Medium', 'Hard']) {
+      expect(screen.getByRole('button', { name: label })).toHaveTextContent(/^\w+$/);
+    }
   });
 
   it('goes back', async () => {

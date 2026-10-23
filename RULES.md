@@ -88,6 +88,10 @@ The top of the play screen has three actions:
   same difficulty as the current game. (To pick another difficulty, start the
   new game from the menu.)
 
+The **New game** buttons on the end screens work the same way: after a game
+over it asks for confirmation (the board could still be retried), after a
+solve it starts the next board straight away, since nothing is lost.
+
 ## Winning and losing
 
 The puzzle is **solved** as soon as every vial is either empty or holds 4 units
@@ -106,15 +110,37 @@ is solved or over.
 ## Scoring
 
 The score rewards solving the puzzle **quickly** and with **few pours**. It is
-calculated when the puzzle is solved:
+calculated when the puzzle is solved and shown on the success screen, not
+during play:
 
 ```
-score = max(100, 10 000 − 5 × seconds − 20 × pours)
+score = max(10, 1000 − 5 × ⌊seconds / 5⌋ − 10 × (pours − 1))
 ```
 
-- `seconds` — the time on the clock (see **Time**) when the puzzle is solved.
-- `pours` — the number of successful pours, including reverted ones.
+- `seconds` — the whole seconds on the clock (see **Time**) when the puzzle is
+  solved. Every full **5 seconds** cost **5 points**.
+- `pours` — the number of successful pours, including reverted ones. Every pour
+  **after the first** costs **10 points**.
 
-Every second costs 5 points and every pour costs 20 points, so one pour is
-worth about four seconds of thinking. A solved puzzle is always worth at least
-100 points. The constants may be tuned as the game evolves.
+A solve in 1 pour and under 5 seconds earns the full **1 000 points**. A solved
+puzzle is always worth at least **10 points**.
+
+## Scores
+
+Every solved game is stored in the browser (`localStorage`) and kept forever,
+so the full history can always be read back. Each entry holds when the game
+was finished, the time, the pours, the score and the game's seed, which
+includes its difficulty. Games that
+end in a game over are not recorded.
+
+A separate **statistics** summary is stored next to the history:
+
+- **Finished games** — the number of solved games.
+- **Fastest solve** — the shortest solve time.
+- **Fewest pours** — the fewest pours in a solve.
+- **Overall score** — the sum of the scores of every solved game.
+
+The **Scores** screen in the menu shows the statistics and lists the games,
+the most recent first: finished at, difficulty, time, pours and seed. It shows
+10 games at first; **Load older games** at the bottom adds 10 more each time. Clicking
+a seed starts that board again (asking first if a game is in progress).

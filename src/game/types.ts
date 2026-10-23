@@ -50,3 +50,23 @@ export interface GameState {
   /** Play time so far; the clock starts with the first pour. */
   elapsedMs: number;
 }
+
+/** A solved game, as kept in the score history. */
+export interface GameRecord {
+  /** Also holds the game's difficulty. */
+  seed: GameSeed;
+  /** When the puzzle was solved, in ms since the epoch. */
+  finishedAt: number;
+  elapsedMs: number;
+  pours: number;
+  score: number;
+}
+
+/** A summary of every solved game, kept next to the history. */
+export interface Stats {
+  finishedGames: number;
+  /** Null until a game is solved. */
+  fastestMs: number | null;
+  fewestPours: number | null;
+  totalScore: number;
+}

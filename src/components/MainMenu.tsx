@@ -7,9 +7,10 @@ interface MainMenuProps {
   hasSavedGame: boolean;
   onContinue: () => void;
   onNewGame: () => void;
+  onScores: () => void;
 }
 
-export function MainMenu({ hasSavedGame, onContinue, onNewGame }: MainMenuProps) {
+export function MainMenu({ hasSavedGame, onContinue, onNewGame, onScores }: MainMenuProps) {
   const [confirmingNewGame, setConfirmingNewGame] = useState(false);
   const [showingHelp, setShowingHelp] = useState(false);
 
@@ -38,8 +39,8 @@ export function MainMenu({ hasSavedGame, onContinue, onNewGame }: MainMenuProps)
         <button className="menu__button" onClick={() => setShowingHelp(true)}>
           How to play
         </button>
-        <button className="menu__button" disabled>
-          Scores <span className="menu__soon">soon</span>
+        <button className="menu__button" onClick={onScores}>
+          Scores
         </button>
         <button className="menu__button" disabled>
           Options <span className="menu__soon">soon</span>

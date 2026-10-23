@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MainMenu } from './MainMenu';
 
 function renderMenu(hasSavedGame: boolean) {
-  const props = { hasSavedGame, onContinue: vi.fn(), onNewGame: vi.fn() };
+  const props = { hasSavedGame, onContinue: vi.fn(), onNewGame: vi.fn(), onScores: vi.fn() };
   render(<MainMenu {...props} />);
   return props;
 }
@@ -34,9 +34,14 @@ describe('MainMenu', () => {
     expect(onContinue).toHaveBeenCalledOnce();
   });
 
-  it('keeps Scores and Options disabled', () => {
+  it('opens the scores', async () => {
+    const { onScores } = renderMenu(true);
+    await userEvent.click(screen.getByRole('button', { name: 'Scores' }));
+    expect(onScores).toHaveBeenCalledOnce();
+  });
+
+  it('keeps Options disabled', () => {
     renderMenu(false);
-    expect(screen.getByRole('button', { name: /Scores/ })).toBeDisabled();
     expect(screen.getByRole('button', { name: /Options/ })).toBeDisabled();
   });
 

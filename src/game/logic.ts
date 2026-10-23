@@ -68,7 +68,14 @@ export function newGameState(seed: GameSeed, board: Board): GameState {
   return { seed, initial: board, board, moves: [], pours: 0, elapsedMs: 0 };
 }
 
-/** See RULES.md → Scoring. */
+export const MAX_SCORE = 1_000;
+export const MIN_SCORE = 10;
+
+/**
+ * See RULES.md → Scoring: 5 points for every full 5 seconds and 10 for every pour after the first, so a
+ * 1-pour, 1-second solve earns the full 1 000.
+ */
 export function score(elapsedMs: number, pours: number): number {
-  return Math.max(100, 10_000 - 5 * Math.floor(elapsedMs / 1000) - 20 * pours);
+  const seconds = Math.floor(elapsedMs / 1000);
+  return Math.max(MIN_SCORE, MAX_SCORE - 5 * Math.floor(seconds / 5) - 10 * Math.max(0, pours - 1));
 }
