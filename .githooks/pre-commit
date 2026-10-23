@@ -1,0 +1,19 @@
+#!/bin/sh
+# Runs the unit tests before every commit; a failing test aborts the commit.
+# Enabled by `npm install` (see the "prepare" script). Skip once with `git commit --no-verify`.
+
+# Git GUIs and editors often run hooks without the shell profile, so Node version managers
+# (nvm, Volta, Homebrew) may not be on the PATH yet. Look for them before giving up.
+if ! command -v npm >/dev/null 2>&1; then
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+  # nvm.sh activates the `default` alias when it loads.
+  [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" >/dev/null 2>&1
+  export PATH="$HOME/.volta/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+  echo "pre-commit: npm not found, so the tests can't run. Make Node available to git, or skip with --no-verify." >&2
+  exit 1
+fi
+
+npm test
