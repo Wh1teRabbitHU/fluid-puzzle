@@ -8,7 +8,7 @@ export type FluidColor =
   | 'lime'
   | 'teal'
   | 'sky'
-  | 'blue'
+  | 'brown'
   | 'indigo'
   | 'magenta'
   | 'white';
@@ -21,11 +21,31 @@ export type Board = Vial[];
 /** `stuck`: not solved, and no legal pour is left. */
 export type GameStatus = 'playing' | 'solved' | 'stuck';
 
+export type Difficulty = 'easy' | 'medium' | 'hard';
+
+/** What a board is generated from: the same seed always gives the same board. */
+export interface GameSeed {
+  difficulty: Difficulty;
+  /** The PRNG seed, an unsigned 32-bit integer. */
+  seed: number;
+}
+
+/** A pour that was made: `amount` units went from vial `from` to vial `to`. */
+export interface Move {
+  from: number;
+  to: number;
+  amount: number;
+}
+
 /** Everything needed to resume a game. */
 export interface GameState {
+  seed: GameSeed;
   /** The generated setup, kept so the game can be retried. */
   initial: Board;
   board: Board;
+  /** The pours that led from `initial` to `board`, oldest first, so they can be reverted. */
+  moves: Move[];
+  /** Every pour made, including reverted ones. */
   pours: number;
   /** Play time so far; the clock starts with the first pour. */
   elapsedMs: number;

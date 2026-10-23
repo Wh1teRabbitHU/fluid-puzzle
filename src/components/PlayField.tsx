@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react';
-import { canPour, gameStatus, pour, score } from '../game/logic';
+import { canPour, gameStatus, isComplete, isSelectable, pour, revertMove, score } from '../game/logic';
+import { DIFFICULTY_LABELS } from '../game/seed';
 import type { GameState, Vial } from '../game/types';
+import { ConfirmDialog } from './ConfirmDialog';
 import { Dialog } from './Dialog';
+import { SeedStat } from './SeedStat';
 import { POUR_DURATION_MS, VialView, type VialState } from './VialView';
 
 interface PlayFieldProps {
   game: GameState;
   /** Called with the new state after every pour (and when the clock pauses); the owner persists it. */
   onChange: (game: GameState) => void;
+  /** From the end dialogs: lets the player pick the next game's difficulty. */
   onNewGame: () => void;
+  /** From the New game action: starts a fresh board on the current game's difficulty straight away. */
+  onNewGameSameDifficulty: () => void;
+  /** Starts the game over from its initial board: Retry after a loss, and Reset. */
   onRetry: () => void;
   onExit: () => void;
 }
@@ -26,11 +33,15 @@ function formatTime(ms: number): string {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
 
-export function PlayField({ game, onChange, onNewGame, onRetry, onExit }: PlayFieldProps) {
+export function PlayField({ game, onChange, onNewGame, onNewGameSameDifficulty, onRetry, onExit }: PlayFieldProps) {
   const { board, pours } = game;
   const status = gameStatus(board);
   const [selected, setSelected] = useState<number | null>(null);
   const [animation, setAnimation] = useState<PourAnimation | null>(null);
+  // The cap drops in with an animation only on the vial the player just completed, not on vials that
+  // were already complete when the game was loaded.
+  const [lastTarget, setLastTarget] = useState<number | null>(null);
+  const [confirmingNewGame, setConfirmingNewGame] = useState(false);
 
   // The clock runs from the first pour until the game ends, paused while the page is hidden or the
   // player is in the menu. `runningSince` is when the current stretch started; null while paused.
@@ -70,7 +81,7 @@ export function PlayField({ game, onChange, onNewGame, onRetry, onExit }: PlayFi
     if (animation !== null) return 'idle';
     if (index === selected) return 'selected';
     if (selected !== null && canPour(board, selected, index)) return 'target';
-    if (board[index].length > 0) return 'selectable';
+    if (isSelectable(board[index])) return 'selectable';
     return 'idle';
   }
 
@@ -80,15 +91,33 @@ export function PlayField({ game, onChange, onNewGame, onRetry, onExit }: PlayFi
       const next = pour(board, selected, index);
       const time = Date.now();
       setAnimation({ from: selected, to: index, amount: board[selected].length - next[selected].length, source: board[selected] });
+      setLastTarget(index);
       setRunningSince(gameStatus(next) === 'playing' ? time : null);
       setNow(time);
       setSelected(null);
-      onChange({ ...game, board: next, pours: pours + 1, elapsedMs: elapsedAt(time) });
-    } else if (index === selected || board[index].length === 0) {
+      const amount = board[selected].length - next[selected].length;
+      onChange({
+        ...game,
+        board: next,
+        moves: [...game.moves, { from: selected, to: index, amount }],
+        pours: pours + 1,
+        elapsedMs: elapsedAt(time),
+      });
+    } else if (index === selected || !isSelectable(board[index])) {
       setSelected(null);
     } else {
       setSelected(index);
     }
+  }
+
+  /** Takes back the last pour, animated as a pour in the other direction. It still counts as a pour made. */
+  function revert() {
+    const move = game.moves.at(-1);
+    if (animation !== null || move === undefined) return;
+    setAnimation({ from: move.to, to: move.from, amount: move.amount, source: board[move.to] });
+    setLastTarget(null);
+    setSelected(null);
+    onChange({ ...game, board: revertMove(board, move), moves: game.moves.slice(0, -1) });
   }
 
   const elapsed = elapsedAt(now);
@@ -106,7 +135,19 @@ export function PlayField({ game, onChange, onNewGame, onRetry, onExit }: PlayFi
         >
           ←
         </button>
+        <div className="play__actions">
+          <button className="play__action" onClick={revert} disabled={game.moves.length === 0 || animation !== null}>
+            Revert
+          </button>
+          <button className="play__action" onClick={onRetry} disabled={pours === 0}>
+            Reset
+          </button>
+          <button className="play__action" onClick={() => setConfirmingNewGame(true)}>
+            New game
+          </button>
+        </div>
         <div className="play__stats">
+          <SeedStat seed={game.seed} />
           <div className="stat">
             <span className="stat__label">Time</span>
             <span className="stat__value">{formatTime(elapsed)}</span>
@@ -129,11 +170,23 @@ export function PlayField({ game, onChange, onNewGame, onRetry, onExit }: PlayFi
               vial={animation?.from === index ? animation.source : vial}
               state={vialState(index)}
               animation={vialAnimation}
+              // A vial being filled gets its cap once the last unit has landed.
+              cap={isComplete(vial) && animation?.to !== index ? (lastTarget === index ? 'new' : 'shown') : 'none'}
               onClick={() => handleClick(index)}
             />
           );
         })}
       </section>
+
+      {confirmingNewGame && (
+        <ConfirmDialog
+          title="Start a new game?"
+          message={`Your current game will be lost and a new ${DIFFICULTY_LABELS[game.seed.difficulty]} game starts. This can't be undone.`}
+          confirmLabel="New game"
+          onConfirm={onNewGameSameDifficulty}
+          onCancel={() => setConfirmingNewGame(false)}
+        />
+      )}
 
       {animation === null && status === 'solved' && (
         <Dialog

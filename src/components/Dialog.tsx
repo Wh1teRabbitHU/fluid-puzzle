@@ -7,10 +7,12 @@ interface DialogProps {
   actions: ReactNode;
   /** Escape / backdrop click. Without it the dialog can only be left through its actions. */
   onCancel?: () => void;
+  /** Makes the dialog a form: Enter in a field, or a submit button, calls this. */
+  onSubmit?: () => void;
 }
 
 /** A modal built on the native <dialog>, which gives focus trapping and Escape handling for free. */
-export function Dialog({ title, children, actions, onCancel }: DialogProps) {
+export function Dialog({ title, children, actions, onCancel, onSubmit }: DialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -18,6 +20,16 @@ export function Dialog({ title, children, actions, onCancel }: DialogProps) {
     dialog?.showModal();
     return () => dialog?.close();
   }, []);
+
+  const body = (
+    <>
+      <h2 id="dialog-title" className="dialog__title">
+        {title}
+      </h2>
+      <div className="dialog__message">{children}</div>
+      <div className="dialog__actions">{actions}</div>
+    </>
+  );
 
   return (
     <dialog
@@ -31,13 +43,19 @@ export function Dialog({ title, children, actions, onCancel }: DialogProps) {
       // A click whose target is the <dialog> itself landed on the backdrop.
       onClick={(event) => event.target === event.currentTarget && onCancel?.()}
     >
-      <div className="dialog__body">
-        <h2 id="dialog-title" className="dialog__title">
-          {title}
-        </h2>
-        <div className="dialog__message">{children}</div>
-        <div className="dialog__actions">{actions}</div>
-      </div>
+      {onSubmit ? (
+        <form
+          className="dialog__body"
+          onSubmit={(event) => {
+            event.preventDefault();
+            onSubmit();
+          }}
+        >
+          {body}
+        </form>
+      ) : (
+        <div className="dialog__body">{body}</div>
+      )}
     </dialog>
   );
 }

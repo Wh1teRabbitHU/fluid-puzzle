@@ -14,14 +14,18 @@ export interface VialAnimation {
   amount: number;
 }
 
+/** A complete vial is capped; `new` drops the cap in with an animation. */
+export type VialCap = 'none' | 'shown' | 'new';
+
 interface VialViewProps {
   vial: Vial;
   state: VialState;
   animation?: VialAnimation;
+  cap?: VialCap;
   onClick: () => void;
 }
 
-export function VialView({ vial, state, animation, onClick }: VialViewProps) {
+export function VialView({ vial, state, animation, cap = 'none', onClick }: VialViewProps) {
   const firstAnimated = animation ? vial.length - animation.amount : vial.length;
   const stepMs = animation ? POUR_DURATION_MS / animation.amount : 0;
 
@@ -41,6 +45,12 @@ export function VialView({ vial, state, animation, onClick }: VialViewProps) {
       aria-pressed={state === 'selected'}
       aria-label={vial.length > 0 ? `Vial with ${vial.join(', ')} (bottom to top)` : 'Empty vial'}
     >
+      {cap !== 'none' && (
+        <div
+          className={`vial__cap${cap === 'new' ? ' vial__cap--new' : ''}`}
+          style={{ background: FLUID_COLORS[vial[0]] }}
+        />
+      )}
       <div className="vial__glass">
         {vial.map((color, index) => (
           <div

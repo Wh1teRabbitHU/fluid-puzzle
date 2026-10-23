@@ -7,7 +7,7 @@ export const FLUID_COLORS: Record<FluidColor, string> = {
   lime: '#8ce04a',
   teal: '#14967f',
   sky: '#5ec8f2',
-  blue: '#3e63ff',
+  brown: '#8d5a32',
   indigo: '#6a3fc8',
   magenta: '#e35bd8',
   white: '#eef1f6',

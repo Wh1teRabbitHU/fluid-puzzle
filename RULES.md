@@ -16,16 +16,37 @@ color**.
   distributed, and **2 vials are empty**. The empty vials give the player room
   to maneuver.
 
+### Difficulty and seeds
+
+A new game starts by picking a difficulty, which sets how many random moves
+mix the board:
+
+| Difficulty | Shuffle moves |
+| ---------- | ------------- |
+| Easy       | 100           |
+| Medium     | 300           |
+| Hard       | 600           |
+
+Every game has a **seed**. The same seed and difficulty always generate the
+same board, so a game can be replayed or shared. The seed shown in the game is
+a code: base64 of a JSON object `{"difficulty": "easy" | "medium" | "hard",
+"seed": <unsigned 32-bit integer>}`. Clicking it copies it; **Load seed** on
+the new-game page plays that board again.
+
 ### Generating a new game
 
-Every new game gets a fresh random setup, built in three steps:
+The board is built from the seed in four steps:
 
 1. Each of the 10 colors fills its own vial (sorted); the other 2 vials are empty.
-2. **50 random single-unit moves** mix the fluids. Only the capacity limits
+2. **Random single-unit moves** (as many as the difficulty sets) mix the fluids. Only the capacity limits
    apply here (the source is not empty, the target is not full, and they are
    different vials); there is no stacking and no color matching.
 3. Any units left in the 2 extra vials are moved at random into the first 10,
    leaving the 2 extra vials empty.
+4. If a vial ended up **complete** (4 units of one color), its top unit is
+   swapped with the top unit of a random other vial that has a different color
+   on top. This repeats until no vial is complete, so a game never starts with
+   a locked vial.
 
 **Retry** restarts the same generated setup, with the time and pours reset.
 
@@ -36,6 +57,7 @@ A move is a single **pour** from a source vial into a target vial.
 1. Only the **top** fluid of the source vial can be poured.
 2. A pour is allowed only if:
    - the source vial is not empty,
+   - the source vial is not **complete** (see below),
    - the source and target are different vials,
    - the target vial is not full, and
    - the target vial is **empty**, or its **top fluid has the same color** as
@@ -47,8 +69,24 @@ A move is a single **pour** from a source vial into a target vial.
    - the target vial is full.
 
    Any units that do not fit stay in the source vial.
-4. Each successful pour counts as **one move**, regardless of how many units
+4. A vial that is **full of a single color is complete**: it gets capped and
+   is locked, so it can no longer be poured from.
+5. Each successful pour counts as **one move**, regardless of how many units
    were transferred.
+
+## Revert, reset and new game
+
+The top of the play screen has three actions:
+
+- **Revert** takes back the last pour: the units go back where they came from,
+  even if that wouldn't be a legal pour (e.g. onto a different color). Pours
+  can be reverted one by one back to the start. A reverted pour still counts
+  towards the pour total, and the clock keeps running.
+- **Reset** starts the game over from its starting position, with the clock
+  and the pour count back at zero (the same as **Retry** after a game over).
+- **New game** asks for confirmation, then starts a new random board on the
+  same difficulty as the current game. (To pick another difficulty, start the
+  new game from the menu.)
 
 ## Winning and losing
 
@@ -74,7 +112,7 @@ score = max(100, 10 000 − 5 × seconds − 20 × pours)
 ```
 
 - `seconds` — the time on the clock (see **Time**) when the puzzle is solved.
-- `pours` — the number of successful pours.
+- `pours` — the number of successful pours, including reverted ones.
 
 Every second costs 5 points and every pour costs 20 points, so one pour is
 worth about four seconds of thinking. A solved puzzle is always worth at least

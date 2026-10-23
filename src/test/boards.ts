@@ -1,5 +1,5 @@
 import { FLUID_COLORS } from '../game/colors';
-import type { Board, FluidColor, GameState } from '../game/types';
+import type { Board, FluidColor, GameSeed, GameState } from '../game/types';
 
 export const COLORS = Object.keys(FLUID_COLORS) as FluidColor[];
 
@@ -11,14 +11,14 @@ export const SOLVED: Board = [...COLORS.map(full), [], []];
 /** One pour (vial 1 → vial 0) away from solved. */
 export const ONE_POUR_FROM_SOLVED: Board = [['red', 'red', 'red'], ['red'], ...COLORS.slice(1).map(full), []];
 
-/** Mid-game: vial 0 has three blues on top of a red, vial 1 a single blue. */
-export const MID_GAME: Board = [['red', 'blue', 'blue', 'blue'], ['blue'], ...COLORS.slice(2).map(full), [], []];
+/** Mid-game: vial 0 has three browns on top of a red, vial 1 a single brown. */
+export const MID_GAME: Board = [['red', 'brown', 'brown', 'brown'], ['brown'], ...COLORS.slice(2).map(full), [], []];
 
 /** Not solved, and no vial can pour anywhere. */
 export const STUCK: Board = [
-  ...COLORS.slice(2).map((color): FluidColor[] => ['red', 'blue', color, color]),
-  ['red', 'blue', 'orange', 'yellow'],
-  ['red', 'blue', 'orange', 'lime'],
+  ...COLORS.slice(2).map((color): FluidColor[] => ['red', 'brown', color, color]),
+  ['red', 'brown', 'orange', 'yellow'],
+  ['red', 'brown', 'orange', 'lime'],
   ['red'],
   ['orange'],
 ];
@@ -29,6 +29,8 @@ export const ONE_POUR_FROM_STUCK: Board = STUCK.map((vial, index) => {
   return vial;
 });
 
+export const TEST_SEED: GameSeed = { difficulty: 'easy', seed: 1 };
+
 export function gameOf(board: Board, extra: Partial<GameState> = {}): GameState {
-  return { initial: board, board, pours: 0, elapsedMs: 0, ...extra };
+  return { seed: TEST_SEED, initial: board, board, moves: [], pours: 0, elapsedMs: 0, ...extra };
 }

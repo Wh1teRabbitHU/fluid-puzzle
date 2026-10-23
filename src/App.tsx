@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { MainMenu } from './components/MainMenu';
+import { NewGameMenu } from './components/NewGameMenu';
 import { PlayField } from './components/PlayField';
 import { generateBoard } from './game/generate';
 import { isSolved, newGameState } from './game/logic';
+import { randomSeed } from './game/seed';
 import { clearGame, loadGame, saveGame } from './game/storage';
-import type { GameState } from './game/types';
+import type { GameSeed, GameState } from './game/types';
 
-type Screen = 'menu' | 'play';
+/** `new`: picking the difficulty (or seed) for a new game. */
+type Screen = 'menu' | 'new' | 'play';
 
 export function App() {
   const [screen, setScreen] = useState<Screen>('menu');
@@ -28,8 +31,11 @@ export function App() {
     setScreen('play');
   }
 
-  const startNewGame = () => start(newGameState(generateBoard()));
-  const retry = () => game && start(newGameState(game.initial));
+  const startNewGame = (seed: GameSeed) => start(newGameState(seed, generateBoard(seed)));
+  const retry = () => game && start(newGameState(game.seed, game.initial));
+  const startSameDifficulty = () => game && startNewGame({ difficulty: game.seed.difficulty, seed: randomSeed() });
+  // The saved game is only replaced once a new one actually starts, so backing out keeps it.
+  const chooseNewGame = () => setScreen('new');
 
   return (
     <div className="app">
@@ -37,15 +43,17 @@ export function App() {
         <MainMenu
           hasSavedGame={game !== null && !isSolved(game.board)}
           onContinue={() => setScreen('play')}
-          onNewGame={startNewGame}
+          onNewGame={chooseNewGame}
         />
       )}
+      {screen === 'new' && <NewGameMenu onStart={startNewGame} onBack={() => setScreen('menu')} />}
       {screen === 'play' && game !== null && (
         <PlayField
           key={round}
           game={game}
           onChange={updateGame}
-          onNewGame={startNewGame}
+          onNewGame={chooseNewGame}
+          onNewGameSameDifficulty={startSameDifficulty}
           onRetry={retry}
           onExit={() => setScreen('menu')}
         />

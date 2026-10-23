@@ -1,5 +1,6 @@
 import { FLUID_COLORS } from './colors';
-import { VIAL_CAPACITY, VIAL_COUNT, type Board, type GameState } from './types';
+import { isGameSeed } from './seed';
+import { VIAL_CAPACITY, VIAL_COUNT, type Board, type GameState, type Move } from './types';
 
 const STORAGE_KEY = 'fluid-puzzle:game';
 
@@ -16,12 +17,30 @@ function isBoard(value: unknown): value is Board {
   );
 }
 
+const isVialIndex = (value: unknown) => Number.isInteger(value) && (value as number) >= 0 && (value as number) < VIAL_COUNT;
+
+function isMove(value: unknown): value is Move {
+  if (typeof value !== 'object' || value === null) return false;
+  const { from, to, amount } = value as Record<string, unknown>;
+  return (
+    isVialIndex(from) &&
+    isVialIndex(to) &&
+    from !== to &&
+    Number.isInteger(amount) &&
+    (amount as number) >= 1 &&
+    (amount as number) <= VIAL_CAPACITY
+  );
+}
+
 function isGameState(value: unknown): value is GameState {
   if (typeof value !== 'object' || value === null) return false;
-  const { initial, board, pours, elapsedMs } = value as Record<string, unknown>;
+  const { seed, initial, board, moves, pours, elapsedMs } = value as Record<string, unknown>;
   return (
+    isGameSeed(seed) &&
     isBoard(initial) &&
     isBoard(board) &&
+    Array.isArray(moves) &&
+    moves.every(isMove) &&
     Number.isInteger(pours) &&
     (pours as number) >= 0 &&
     typeof elapsedMs === 'number' &&
@@ -35,6 +54,8 @@ export function loadGame(): GameState | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw === null) return null;
     const parsed: unknown = JSON.parse(raw);
+    // Games saved before reverting existed have no move history: they resume with nothing to revert.
+    if (typeof parsed === 'object' && parsed !== null && !('moves' in parsed)) Object.assign(parsed, { moves: [] });
     return isGameState(parsed) ? parsed : null;
   } catch {
     return null;

@@ -20,6 +20,18 @@ describe('storage', () => {
     expect(loadGame()).toEqual(game);
   });
 
+  it('round-trips the move history', () => {
+    const game = gameOf(MID_GAME, { moves: [{ from: 0, to: 1, amount: 3 }], pours: 2 });
+    saveGame(game);
+    expect(loadGame()).toEqual(game);
+  });
+
+  it('resumes a game saved without a move history, with nothing to revert', () => {
+    const { moves: _, ...game } = gameOf(MID_GAME, { pours: 3 });
+    stored(game);
+    expect(loadGame()).toEqual(gameOf(MID_GAME, { pours: 3 }));
+  });
+
   it('clears the saved game', () => {
     saveGame(gameOf(MID_GAME));
     clearGame();
@@ -42,6 +54,13 @@ describe('storage', () => {
     ['fractional pours', gameOf(MID_GAME, { pours: 1.5 })],
     ['negative time', gameOf(MID_GAME, { elapsedMs: -1 })],
     ['missing time', { initial: MID_GAME, board: MID_GAME, pours: 0 }],
+    ['missing seed', { initial: MID_GAME, board: MID_GAME, pours: 0, elapsedMs: 0 }],
+    ['moves that are not a list', gameOf(MID_GAME, { moves: {} as never })],
+    ['a move from a vial that does not exist', gameOf(MID_GAME, { moves: [{ from: 12, to: 0, amount: 1 }] })],
+    ['a move into the same vial', gameOf(MID_GAME, { moves: [{ from: 1, to: 1, amount: 1 }] })],
+    ['a move of no units', gameOf(MID_GAME, { moves: [{ from: 0, to: 1, amount: 0 }] })],
+    ['a move of more units than a vial holds', gameOf(MID_GAME, { moves: [{ from: 0, to: 1, amount: 5 }] })],
+    ['an invalid seed', gameOf(MID_GAME, { seed: { difficulty: 'expert', seed: 1 } as never })],
   ])('ignores a stored game with %s', (_, value) => {
     stored(value);
     expect(loadGame()).toBeNull();
